@@ -1,5 +1,4 @@
 #include "filesystem_proxy.hpp"
-#include "filesystem_path.hpp"
 
 
 bool create_file_proxy(filesystem_proxy* fs_proxy, std::string file_path)
@@ -297,4 +296,45 @@ bool remove_folder_proxy(filesystem_proxy* fs_proxy, std::string folder_path)
 	}
 
 	return true;
+}
+
+bool create_symlink_proxy(filesystem_proxy* fs_proxy, std::string symlink_path, std::string file_path) {
+	if (file_path.length() == 0) {
+		return false;
+	}
+
+	std::pair<std::string, std::string> file_path_splitted;
+	uint32 folder_index;
+
+	if (file_path[0] == '/') {
+		file_path_splitted = split_by_last_slash("/." + file_path);
+		folder_index = get_file_by_path(fs_proxy->fs, file_path_splitted.first, fs_proxy->cwd);
+	}
+	else {
+		file_path_splitted = split_by_last_slash("./" + file_path);
+		folder_index = get_file_by_path(fs_proxy->fs, file_path_splitted.first, fs_proxy->cwd);
+	}
+
+	if (folder_index == INDEX_EMPTY) {
+		return false;
+	}
+
+	if (get_file(fs_proxy->fs, folder_index)->type != FILE_FOLDER) {
+		return false;
+	}
+
+	if (file_path_splitted.second.length() > MEMBER_NAME_CHARS) {
+		return false;
+	}
+
+	uint8 name[MEMBER_NAME_CHARS] = {};
+	MEMBER_NAME_to_chars(file_path_splitted.second, name);
+
+	uint32 index = create_symlink_in_folder(fs_proxy->fs, folder_index, name, (const uint8*)symlink_path.c_str());
+
+	if (index == SYMLINK_CREATE_UNSUCCESSFUL) {
+		return false;
+	}
+
+	return true;	
 }

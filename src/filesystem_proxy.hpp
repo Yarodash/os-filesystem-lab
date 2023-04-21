@@ -1,7 +1,7 @@
 #pragma once
 
 #include "filesystem_folders.hpp"
-#include <string>
+#include "filesystem_path.hpp"
 
 #define MAX_DESCRIPTORS 16
 
@@ -37,3 +37,5 @@ bool create_link_proxy(filesystem_proxy* fs_proxy, std::string file_path, std::s
 bool unlink_file_proxy(filesystem_proxy* fs_proxy, std::string file_path);
 
 bool remove_folder_proxy(filesystem_proxy* fs_proxy, std::string folder_path);
+
+bool create_symlink_proxy(filesystem_proxy* fs_proxy, std::string symlink_path, std::string file_path);

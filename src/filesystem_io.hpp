@@ -20,4 +20,4 @@ uint32 read_descriptor(filesystem* fs, descriptor* d, uint8* buf, uint32 size);
 
 uint32 write_descriptor_local(filesystem* fs, descriptor* d, file* f, const uint8* buf, uint32 size);
 
-uint32 write_descriptor(filesystem* fs, descriptor* d, uint8* buf, uint32 size);
+uint32 write_descriptor(filesystem* fs, descriptor* d, const uint8* buf, uint32 size);

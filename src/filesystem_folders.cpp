@@ -21,6 +21,7 @@ bool check_name(const uint8 name[MEMBER_NAME_CHARS])
 member_pos_index get_folder_member(filesystem* fs, uint32 folder_index, const uint8 name[MEMBER_NAME_CHARS])
 {
     file* folder = get_file(fs, folder_index);
+    assert(folder->type == FILE_FOLDER);
 
     descriptor d{};
     init_descriptor(&d, fs, folder_index);
@@ -292,6 +293,66 @@ uint32 delete_link_folder_in_folder(filesystem* fs, uint32 folder_index, const u
         folder_remove_member(fs, folder_index, member.pos);
         delete_file(fs, member.index);
         folder->nlink--;
+
+        return UNLINK_SUCCESSFUL;
+    }
+
+    return UNLINK_UNSUCCESSFUL;
+}
+
+uint32 create_symlink_in_folder(filesystem* fs, uint32 folder_index, const uint8 name[MEMBER_NAME_CHARS], const uint8* symlink_path)
+{
+    assert(get_file(fs, folder_index)->type == FILE_FOLDER);
+
+    uint32 symlink_index = create_file(fs, FILE_SYMLINK);
+    if (symlink_index == INDEX_EMPTY) {
+        return SYMLINK_CREATE_UNSUCCESSFUL;
+    }
+
+    if (folder_add_member(fs, folder_index, symlink_index, name) != MEMBER_ADDED_SUCCESSFUL) 
+    {
+        delete_file(fs, symlink_index);
+        return SYMLINK_CREATE_UNSUCCESSFUL;
+    }
+
+    descriptor d;
+    init_descriptor(&d, fs, symlink_index);
+    uint32 symlink_path_size = strlen((const char*)symlink_path);
+    if (write_descriptor(fs, &d, symlink_path, symlink_path_size) != symlink_path_size) 
+    {
+        delete_file(fs, symlink_index);
+        return SYMLINK_CREATE_UNSUCCESSFUL;
+    }
+
+    return symlink_index;
+}
+
+uint32 delete_symlink_in_folder(filesystem* fs, uint32 folder_index, const uint8 name[MEMBER_NAME_CHARS])
+{
+    file* folder = get_file(fs, folder_index);
+    assert(folder->type == FILE_FOLDER);
+
+    if (memcmp(name, parent_folder_name, MEMBER_NAME_CHARS) == 0 ||
+        memcmp(name, current_folder_name, MEMBER_NAME_CHARS) == 0)
+    {
+        return UNLINK_UNSUCCESSFUL;
+    }
+
+    member_pos_index member = get_folder_member(fs, folder_index, name);
+
+    if (member.pos == INDEX_EMPTY) {
+        return UNLINK_UNSUCCESSFUL;
+    }
+
+    file* member_file = get_file(fs, member.index);
+
+    if (member_file->type == FILE_SYMLINK) 
+    {
+        folder_remove_member(fs, folder_index, member.pos);
+
+        if (--member_file->nlink == 0) {
+            delete_file(fs, member.index);
+        }
 
         return UNLINK_SUCCESSFUL;
     }

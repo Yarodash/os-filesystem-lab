@@ -17,7 +17,7 @@ std::string __get_full_path(filesystem* fs, uint32 folder_index)
 	return __get_full_path(fs, parent_folder_index) + "/" + current_folder_name;
 }
 
-std::string get_full_path_proxy(filesystem* fs, uint32 folder_index)
+std::string get_full_path(filesystem* fs, uint32 folder_index)
 {
 	if (folder_index == 0) {
 		return "/";
@@ -26,8 +26,20 @@ std::string get_full_path_proxy(filesystem* fs, uint32 folder_index)
 	return __get_full_path(fs, folder_index);
 }
 
+std::string get_full_path_file(filesystem* fs, uint32 folder_index, uint32 member_index) {
+	std::string folder_path = get_full_path(fs, folder_index);
+	if (folder_path[folder_path.length() - 1] != '/') {
+		folder_path += "/";
+	}
+	return folder_path + get_folder_member_name(fs, folder_index, member_index);
+}
+
 uint32 get_file_index_in_folder(filesystem* fs, uint32 folder_index, std::string file_name) 
 {
+	if (get_file(fs, folder_index)->type != FILE_FOLDER) {
+		return INDEX_EMPTY;
+	}
+
 	if (file_name.length() > MEMBER_NAME_CHARS) {
 		return INDEX_EMPTY;
 	}
@@ -36,6 +48,15 @@ uint32 get_file_index_in_folder(filesystem* fs, uint32 folder_index, std::string
 	MEMBER_NAME_to_chars(file_name, name);
 
 	uint32 file_index = get_folder_member(fs, folder_index, name).index;
+
+	if (file_index == INDEX_EMPTY) {
+		return INDEX_EMPTY;
+	}
+
+	if (get_file(fs, file_index)->type == FILE_SYMLINK) {
+		return get_symlink(fs, folder_index, file_index);
+	}
+
 	return file_index;
 }
 
@@ -64,6 +85,10 @@ uint32 get_file_by_local_path(filesystem* fs, uint32 folder_index, std::string f
 
 uint32 get_file_by_path(filesystem* fs, std::string file_path, uint32 cwd)
 {
+	if (file_path == "/") {
+		return 0;
+	}
+
 	if (file_path[0] == '/') {
 		return get_file_by_local_path(fs, 0, file_path.substr(1));
 	}
@@ -112,4 +137,22 @@ std::pair<uint32, std::string> get_folder_and_file_by_path(filesystem* fs, std::
 	}
 
 	return { folder_index, file_path_splitted.second };
+}
+
+uint32 get_symlink(filesystem* fs, uint32 folder_index, uint32 symlink_index) 
+{
+	file* symlink_file = get_file(fs, symlink_index);
+	assert(symlink_file->type == FILE_SYMLINK);
+
+	uint32 symlink_size = symlink_file->size;
+	uint8* symlink_path = new uint8[symlink_size + 1]();
+
+	descriptor d;
+	init_descriptor(&d, fs, symlink_index);
+	assert(read_descriptor(fs, &d, symlink_path, symlink_size) == symlink_size);
+
+	std::string symlink_path_str((char*)symlink_path);
+	delete[] symlink_path;
+
+	return get_file_by_path(fs, symlink_path_str, folder_index);
 }

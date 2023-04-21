@@ -20,6 +20,8 @@
 #define UNLINK_SUCCESSFUL 0x00'00'00'00
 #define UNLINK_UNSUCCESSFUL 0x00'00'00'01
 
+#define SYMLINK_CREATE_UNSUCCESSFUL 0xff'ff'ff'ff
+
 struct member_pos_index {
     uint32 pos;
     uint32 index;
@@ -56,3 +58,7 @@ bool is_folder_empty(filesystem* fs, uint32 folder_index);
 uint32 delete_link_file_in_folder(filesystem* fs, uint32 folder_index, const uint8 name[MEMBER_NAME_CHARS]);
 
 uint32 delete_link_folder_in_folder(filesystem* fs, uint32 folder_index, const uint8 name[MEMBER_NAME_CHARS]);
+
+uint32 create_symlink_in_folder(filesystem* fs, uint32 folder_index, const uint8 name[MEMBER_NAME_CHARS], const uint8* symlink_path);
+
+uint32 delete_symlink_in_folder(filesystem* fs, uint32 folder_index, const uint8 name[MEMBER_NAME_CHARS]);

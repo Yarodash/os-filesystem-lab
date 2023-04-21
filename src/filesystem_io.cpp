@@ -114,7 +114,7 @@ uint32 write_descriptor_local(filesystem* fs, descriptor* d, file* f, const uint
     return local_write_size;
 }
 
-uint32 write_descriptor(filesystem* fs, descriptor* d, uint8* buf, uint32 size)
+uint32 write_descriptor(filesystem* fs, descriptor* d, const uint8* buf, uint32 size)
 {
     file* f = get_file(fs, d->file_index);
     uint32 data_left = f->size - d->seek;

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "filesystem_proxy.hpp"
+#include "filesystem_iterator.hpp"
 #include <string>
 #include <memory>
+#include <vector>
 
 class FileSystem
 {
@@ -21,6 +23,8 @@ public:
 	bool unlink(std::string file_path);
 	bool truncate(std::string file_path, uint32 new_size);
 
+	bool stat(std::string path);
+
 	uint32 open(std::string file_path);
 	uint32 read(uint32 fd, uint8* buf, uint32 size);
 	uint32 write(uint32 fd, uint8* buf, uint32 size);
@@ -30,4 +34,9 @@ public:
 	bool cd(std::string folder_path);
 	bool mkdir(std::string folder_path);
 	bool rmdir(std::string folder_path);
+	
+	bool symlink(std::string symlink_path, std::string file_path);
+
+	std::vector<std::string> listdir(std::string folder_path);
+	bool ls(std::string folder_path);
 };

@@ -29,6 +29,7 @@ struct file {
 #define FILE_FREE 0x00'00'00'00
 #define FILE_FOLDER 0x00'00'00'01
 #define FILE_REGULAR 0x00'00'00'02
+#define FILE_SYMLINK 0x00'00'00'04
 
 struct map {
     uint32 next_map_index;
